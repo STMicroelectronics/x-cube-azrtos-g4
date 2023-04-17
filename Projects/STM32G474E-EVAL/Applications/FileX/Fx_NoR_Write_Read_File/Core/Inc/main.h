@@ -31,7 +31,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <stdio.h>
+
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -57,8 +57,13 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-void   MX_QUADSPI1_Init(void);
+#define LED2_Pin GPIO_PIN_11
+#define LED2_GPIO_Port GPIOF
+#define LED1_Pin GPIO_PIN_9
+#define LED1_GPIO_Port GPIOG
+
 /* USER CODE BEGIN Private defines */
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

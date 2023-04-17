@@ -10,14 +10,14 @@
       <TargetName>Tx_Module</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pCCUsed>6140001::V6.14.1::ARMCLANG</pCCUsed>
+      <pCCUsed>6180000::V6.18::ARMCLANG</pCCUsed>
       <uAC6>1</uAC6>
       <TargetOption>
         <TargetCommonOption>
           <Device>STM32G474RETx</Device>
           <Vendor>STMicroelectronics</Vendor>
-          <PackID>Keil.STM32G4xx_DFP.1.4.0</PackID>
-          <PackURL>http://www.keil.com/pack/</PackURL>
+          <PackID>Keil.STM32G4xx_DFP.1.5.0</PackID>
+          <PackURL>https://www.keil.com/pack/</PackURL>
           <Cpu>IRAM(0x20000000,0x00020000) IROM(0x08000000,0x00080000) CPUTYPE("Cortex-M4") FPU2 CLOCK(12000000) ELITTLE</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
           <StartupFile></StartupFile>
@@ -82,7 +82,7 @@
           <AfterMake>
             <RunUserProg1>1</RunUserProg1>
             <RunUserProg2>0</RunUserProg2>
-            <UserProg1Name>$K\ARM\ARMCC\bin\fromelf.exe --bin --output=@L.bin !L</UserProg1Name>
+            <UserProg1Name>$K\ARM\ARMCLANG\bin\fromelf.exe --bin --output=@L.bin !L</UserProg1Name>
             <UserProg2Name>fromelf !L --disassemble --interleave=source  --text -c --output=outfile.lst</UserProg2Name>
             <UserProg1Dos16Mode>0</UserProg1Dos16Mode>
             <UserProg2Dos16Mode>0</UserProg2Dos16Mode>
@@ -138,7 +138,7 @@
           </Flash1>
           <bUseTDR>1</bUseTDR>
           <Flash2>BIN\UL2CM3.DLL</Flash2>
-          <Flash3></Flash3>
+          <Flash3>"" ()</Flash3>
           <Flash4></Flash4>
           <pFcarmOut></pFcarmOut>
           <pFcarmGrp></pFcarmGrp>
@@ -186,6 +186,7 @@
             <RvdsVP>2</RvdsVP>
             <RvdsMve>0</RvdsMve>
             <RvdsCdeCp>0</RvdsCdeCp>
+            <nBranchProt>0</nBranchProt>
             <hadIRAM2>0</hadIRAM2>
             <hadIROM2>0</hadIROM2>
             <StupSel>8</StupSel>
@@ -367,9 +368,9 @@
             <noStLib>0</noStLib>
             <RepFail>1</RepFail>
             <useFile>0</useFile>
-            <TextAddressRange>0</TextAddressRange>
-            <DataAddressRange>0</DataAddressRange>
-            <pXoBase>0</pXoBase>
+            <TextAddressRange>0x08020000</TextAddressRange>
+            <DataAddressRange>0x08020000</DataAddressRange>
+            <pXoBase>0x08020000</pXoBase>
             <ScatterFile></ScatterFile>
             <IncludeLibs></IncludeLibs>
             <IncludeLibsPath></IncludeLibsPath>
@@ -511,11 +512,6 @@
               <FilePath>..\Src\app_threadx.c</FilePath>
             </File>
             <File>
-              <FileName>tx_initialize_low_level.s</FileName>
-              <FileType>2</FileType>
-              <FilePath>../Src/tx_initialize_low_level.s</FilePath>
-            </File>
-            <File>
               <FileName>stm32g4xx_it.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Src/stm32g4xx_it.c</FilePath>
@@ -529,6 +525,11 @@
               <FileName>stm32g4xx_hal_timebase_tim.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Src/stm32g4xx_hal_timebase_tim.c</FilePath>
+            </File>
+            <File>
+              <FileName>tx_initialize_low_level.S</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\Src\tx_initialize_low_level.S</FilePath>
             </File>
           </Files>
         </Group>
@@ -2213,6 +2214,11 @@
               <FileName>txm_module_preamble.s</FileName>
               <FileType>2</FileType>
               <FilePath>.\txm_module_preamble.s</FilePath>
+            </File>
+            <File>
+              <FileName>retarget.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\retarget.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -2806,14 +2812,14 @@
       <TargetName>Tx_ModuleManager</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pCCUsed>6140001::V6.14.1::ARMCLANG</pCCUsed>
+      <pCCUsed>6180000::V6.18::ARMCLANG</pCCUsed>
       <uAC6>1</uAC6>
       <TargetOption>
         <TargetCommonOption>
           <Device>STM32G474RETx</Device>
           <Vendor>STMicroelectronics</Vendor>
-          <PackID>Keil.STM32G4xx_DFP.1.4.0</PackID>
-          <PackURL>http://www.keil.com/pack/</PackURL>
+          <PackID>Keil.STM32G4xx_DFP.1.5.0</PackID>
+          <PackURL>https://www.keil.com/pack/</PackURL>
           <Cpu>IRAM(0x20000000,0x00020000) IROM(0x08000000,0x00080000) CPUTYPE("Cortex-M4") FPU2 CLOCK(12000000) ELITTLE</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
           <StartupFile></StartupFile>
@@ -2982,6 +2988,7 @@
             <RvdsVP>2</RvdsVP>
             <RvdsMve>0</RvdsMve>
             <RvdsCdeCp>0</RvdsCdeCp>
+            <nBranchProt>0</nBranchProt>
             <hadIRAM2>0</hadIRAM2>
             <hadIROM2>0</hadIROM2>
             <StupSel>8</StupSel>
@@ -3200,11 +3207,6 @@
               <FilePath>..\Src\app_threadx.c</FilePath>
             </File>
             <File>
-              <FileName>tx_initialize_low_level.s</FileName>
-              <FileType>2</FileType>
-              <FilePath>../Src/tx_initialize_low_level.s</FilePath>
-            </File>
-            <File>
               <FileName>stm32g4xx_it.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Src/stm32g4xx_it.c</FilePath>
@@ -3218,6 +3220,11 @@
               <FileName>stm32g4xx_hal_timebase_tim.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Src/stm32g4xx_hal_timebase_tim.c</FilePath>
+            </File>
+            <File>
+              <FileName>tx_initialize_low_level.S</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\Src\tx_initialize_low_level.S</FilePath>
             </File>
           </Files>
         </Group>
@@ -4557,6 +4564,11 @@
               <FileName>txm_module_preamble.s</FileName>
               <FileType>2</FileType>
               <FilePath>.\txm_module_preamble.s</FilePath>
+            </File>
+            <File>
+              <FileName>retarget.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\retarget.c</FilePath>
             </File>
           </Files>
         </Group>

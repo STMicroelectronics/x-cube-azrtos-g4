@@ -15,7 +15,7 @@
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2021 STMicroelectronics.
+  * Copyright (c) 2019 STMicroelectronics.
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
@@ -93,7 +93,7 @@ LoopFillZerobss:
   cmp r2, r4
   bcc FillZerobss
 
-/* Call the clock system initialization function.*/
+/* Call the clock system intitialization function.*/
     bl  SystemInit
 /* Call static constructors */
     bl __libc_init_array
@@ -588,4 +588,3 @@ g_pfnVectors:
 	.weak	FMAC_IRQHandler
 	.thumb_set FMAC_IRQHandler,Default_Handler
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

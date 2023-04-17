@@ -76,11 +76,11 @@
                 </option>
                 <option>
                     <name>OCDownloadVerifyAll</name>
-                    <state>1</state>
+                    <state>0</state>
                 </option>
                 <option>
                     <name>OCProductVersion</name>
-                    <state>8.32.3.20186</state>
+                    <state>8.50.9.33458</state>
                 </option>
                 <option>
                     <name>OCDynDriverList</name>
@@ -88,7 +88,7 @@
                 </option>
                 <option>
                     <name>OCLastSavedByProductVersion</name>
-                    <state>8.50.6.28611</state>
+                    <state>8.50.9.33458</state>
                 </option>
                 <option>
                     <name>UseFlashLoader</name>
@@ -116,7 +116,7 @@
                 </option>
                 <option>
                     <name>OCImagesSuppressCheck1</name>
-                    <state>1</state>
+                    <state>0</state>
                 </option>
                 <option>
                     <name>OCImagesPath1</name>
@@ -144,7 +144,7 @@
                 </option>
                 <option>
                     <name>OCImagesOffset1</name>
-                    <state>0</state>
+                    <state />
                 </option>
                 <option>
                     <name>OCImagesOffset2</name>

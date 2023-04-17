@@ -16,7 +16,7 @@ As stated earlier, the present application runs in standalone mode without Threa
 
 #### <b>Expected success behavior</b>
 
-Successful operation is marked by a toggeling green LED light.
+Successful operation is marked by a toggling green LED light.
 
 Also, information regarding executing operation on the SRAM-Disk is printed to the serial port.
 

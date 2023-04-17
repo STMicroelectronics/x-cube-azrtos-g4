@@ -28,6 +28,7 @@
     EXTERN  _tx_thread_preempt_disable
     EXTERN  _txm_module_manager_memory_fault_handler
     EXTERN  _txm_module_manager_memory_fault_info
+    EXTERN  txm_module_default_mpu_registers
 
     SECTION `.text`:CODE:NOROOT(2)
     THUMB
@@ -35,8 +36,8 @@
 /*                                                                        */
 /*  FUNCTION                                               RELEASE        */
 /*                                                                        */
-/*    _tx_thread_schedule                             Cortex-M7/MPU/IAR   */
-/*                                                           6.1.7        */
+/*    _tx_thread_schedule                               Cortex-M7/IAR     */
+/*                                                           6.2.0        */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    Scott Larson, Microsoft Corporation                                 */
@@ -63,21 +64,21 @@
 /*                                                                        */
 /*    _tx_initialize_kernel_enter          ThreadX entry function         */
 /*    _tx_thread_system_return             Return to system from thread   */
-/*    _tx_thread_context_restore           Restore thread's context       */
 /*                                                                        */
 /*  RELEASE HISTORY                                                       */
 /*                                                                        */
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
-/*  09-30-2020      Scott Larson            Initial Version 6.1           */
-/*  11-09-2020      Scott Larson            Modified comment(s), arrange  */
-/*                                            code to fix link error when */
-/*                                            VFP is enabled, resulting   */
-/*                                            in version 6.1.2            */
-/*  06-02-2021      Scott Larson            Fixed extended stack handling */
-/*                                            when calling kernel APIs,   */
-/*                                            added support for 8 MPU,    */
-/*                                            resulting in version 6.1.7  */
+/*  10-15-2021      Scott Larson            Initial Version 6.1.9         */
+/*  04-25-2022      Scott Larson            Optimized MPU configuration,  */
+/*                                            added BASEPRI support,      */
+/*                                            resulting in version 6.1.11 */
+/*  07-29-2022      Scott Larson            Removed the code path to skip */
+/*                                            MPU reloading, optional     */
+/*                                            default MPU settings,       */
+/*                                            resulting in version 6.1.12 */
+/*  10-31-2022      Scott Larson            Added low power support,      */
+/*                                            resulting in version 6.2.0  */
 /*                                                                        */
 /**************************************************************************/
 // VOID   _tx_thread_schedule(VOID)
@@ -103,7 +104,6 @@ _tx_thread_schedule:
 #endif
 
     /* Enable memory fault registers.  */
-
     LDR     r0, =0xE000ED24                         // Build SHCSR address
     LDR     r1, =0x70000                            // Enable Usage, Bus, and MemManage faults
     STR     r1, [r0]                                //
@@ -134,8 +134,12 @@ __tx_wait_here:
 MemManage_Handler:
 BusFault_Handler:
 UsageFault_Handler:
-
+#ifdef TX_PORT_USE_BASEPRI
+    LDR     r1, =TX_PORT_BASEPRI                    // Mask interrupt priorities =< TX_PORT_BASEPRI
+    MSR     BASEPRI, r1
+#else
     CPSID   i                                       // Disable interrupts
+#endif  /* TX_PORT_USE_BASEPRI */
 
     /* Now pickup and store all the fault related information.  */
 
@@ -218,7 +222,12 @@ UsageFault_Handler:
     LDR     r1, =0x10000000                         // Set PENDSVSET bit
     STR     r1, [r0]                                // Store ICSR
     DSB                                             // Wait for memory access to complete
+#ifdef TX_PORT_USE_BASEPRI
+    MOV     r0, 0                                   // Disable BASEPRI masking (enable interrupts)
+    MSR     BASEPRI, r0
+#else
     CPSIE   i                                       // Enable interrupts
+#endif
     MOV     lr, #0xFFFFFFFD                         // Load exception return code
     BX      lr                                      // Return from exception
 
@@ -236,12 +245,22 @@ __tx_ts_handler:
 
 #if (defined(TX_ENABLE_EXECUTION_CHANGE_NOTIFY) || defined(TX_EXECUTION_PROFILE_ENABLE))
     /* Call the thread exit function to indicate the thread is no longer executing.  */
+#ifdef TX_PORT_USE_BASEPRI
+    LDR     r1, =TX_PORT_BASEPRI                    // Mask interrupt priorities =< TX_PORT_BASEPRI
+    MSR     BASEPRI, r1
+#else
     CPSID   i                                       // Disable interrupts
+#endif  /* TX_PORT_USE_BASEPRI */
     PUSH    {r0, lr}                                // Save LR (and r0 just for alignment)
     BL      _tx_execution_thread_exit               // Call the thread exit function
     POP     {r0, lr}                                // Recover LR
+#ifdef TX_PORT_USE_BASEPRI
+    MOV     r0, 0                                   // Disable BASEPRI masking (enable interrupts)
+    MSR     BASEPRI, r0
+#else
     CPSIE   i                                       // Enable interrupts
-#endif
+#endif  /* TX_PORT_USE_BASEPRI */
+#endif  /* EXECUTION PROFILE */
 
     LDR     r0, =_tx_thread_current_ptr             // Build current thread pointer address
     LDR     r2, =_tx_thread_execute_ptr             // Build execute thread pointer address
@@ -286,7 +305,12 @@ __tx_ts_new:
 
     /* Now we are looking for a new thread to execute!  */
 
+#ifdef TX_PORT_USE_BASEPRI
+    LDR     r1, =TX_PORT_BASEPRI                    // Mask interrupt priorities =< TX_PORT_BASEPRI
+    MSR     BASEPRI, r1
+#else
     CPSID   i                                       // Disable interrupts
+#endif
     LDR     r1, [r2]                                // Is there another thread ready to execute?
     CBNZ    r1, __tx_ts_restore                     // Yes, schedule it
 
@@ -295,15 +319,39 @@ __tx_ts_new:
        are disabled to allow use of WFI for waiting for a thread to arrive.  */
 
 __tx_ts_wait:
+#ifdef TX_PORT_USE_BASEPRI
+    LDR     r1, =TX_PORT_BASEPRI                    // Mask interrupt priorities =< TX_PORT_BASEPRI
+    MSR     BASEPRI, r1
+#else
     CPSID   i                                       // Disable interrupts
+#endif
     LDR     r1, [r2]                                // Pickup the next thread to execute pointer
     CBNZ    r1, __tx_ts_ready                       // If non-NULL, a new thread is ready!
+
+#ifdef TX_LOW_POWER
+    PUSH    {r0-r3}
+    BL      tx_low_power_enter                      // Possibly enter low power mode
+    POP     {r0-r3}
+#endif
+
 #ifdef TX_ENABLE_WFI
     DSB                                             // Ensure no outstanding memory transactions
     WFI                                             // Wait for interrupt
     ISB                                             // Ensure pipeline is flushed
 #endif
+
+#ifdef TX_LOW_POWER
+    PUSH    {r0-r3}
+    BL      tx_low_power_exit                       // Exit low power mode
+    POP     {r0-r3}
+#endif
+
+#ifdef TX_PORT_USE_BASEPRI
+    MOV     r4, #0                                  // Disable BASEPRI masking (enable interrupts)
+    MSR     BASEPRI, r4
+#else
     CPSIE   i                                       // Enable interrupts
+#endif
     B       __tx_ts_wait                            // Loop to continue waiting
 
     /* At this point, we have a new thread ready to go. Clear any newly pended PendSV - since we are
@@ -320,7 +368,12 @@ __tx_ts_restore:
        and enable interrupts.  */
 
     STR     r1, [r0]                                // Setup the current thread pointer to the new thread
+#ifdef TX_PORT_USE_BASEPRI
+    MOV     r4, #0                                  // Disable BASEPRI masking (enable interrupts)
+    MSR     BASEPRI, r4
+#else
     CPSIE   i                                       // Enable interrupts
+#endif
 
     /* Increment the thread run count.  */
 
@@ -353,34 +406,51 @@ __tx_ts_restore:
 
     LDR     r0, =0xE000ED94                         // Build MPU control reg address
     MOV     r3, #0                                  // Build disable value
+    CPSID   i                                       // Disable interrupts
     STR     r3, [r0]                                // Disable MPU
     LDR     r0, [r1, #0x90]                         // Pickup the module instance pointer
+#ifdef TXM_MODULE_MPU_DEFAULT
+    CBZ     r0, default_mpu                         // Is this thread owned by a module? No, default MPU setup
+#else
     CBZ     r0, skip_mpu_setup                      // Is this thread owned by a module? No, skip MPU setup
-    LDR     r1, [r0, #0x64]                         // Pickup MPU register[0]
-    CBZ     r1, skip_mpu_setup                      // Is protection required for this module? No, skip MPU setup
-    LDR     r1, =0xE000ED9C                         // Build address of MPU base register
+#endif
+
+    LDR     r2, [r0, #0x8C]                         // Pickup MPU region 5 address
+#ifdef TXM_MODULE_MPU_DEFAULT
+    CBZ     r2, default_mpu                         // Is protection required for this module? No, default MPU setup
+#else
+    CBZ     r2, skip_mpu_setup                      // Is protection required for this module? No, skip MPU setup
+#endif
+    LDR     r1, =0xE000ED9C                         // MPU_RBAR register address
 
     // Use alias registers to quickly load MPU
     ADD     r0, r0, #100                            // Build address of MPU register start in thread control block
-#ifndef TXM_MODULE_MANAGER_8_MPU
+
+#ifdef TXM_MODULE_MPU_DEFAULT
+    B       config_mpu                              // configure MPU for module
+default_mpu:
+    LDR     r0, =txm_module_default_mpu_registers   // default MPU configuration
+#endif
+
+config_mpu:
     LDM     r0!,{r2-r9}                             // Load MPU regions 0-3
     STM     r1,{r2-r9}                              // Store MPU regions 0-3
     LDM     r0!,{r2-r9}                             // Load MPU regions 4-7
     STM     r1,{r2-r9}                              // Store MPU regions 4-7
+#ifdef TXM_MODULE_MANAGER_16_MPU
     LDM     r0!,{r2-r9}                             // Load MPU regions 8-11
     STM     r1,{r2-r9}                              // Store MPU regions 8-11
+    // Regions 12-15 are reserved for the user to define.
     LDM     r0,{r2-r9}                              // Load MPU regions 12-15
     STM     r1,{r2-r9}                              // Store MPU regions 12-15
-#else
-    LDM     r0!,{r2-r9}                             // Load first four MPU regions
-    STM     r1,{r2-r9}                              // Store first four MPU regions
-    LDM     r0,{r2-r9}                              // Load second four MPU regions
-    STM     r1,{r2-r9}                              // Store second four MPU regions
 #endif
+
+_tx_enable_mpu:
     LDR     r0, =0xE000ED94                         // Build MPU control reg address
     MOV     r1, #5                                  // Build enable value with background region enabled
     STR     r1, [r0]                                // Enable MPU
 skip_mpu_setup:
+    CPSIE   i                                       // Enable interrupts
     LDMIA   r12!, {LR}                              // Pickup LR
 #ifdef __ARMVFP__
     TST     LR, #0x10                               // Determine if the VFP extended frame is present
@@ -445,13 +515,17 @@ __tx_SVCallHandler:
 #endif
 
     MRS     r3, PSP                                 // Pickup thread stack pointer
+#ifdef __ARMVFP__
     TST     lr, #0x10                               // Test for extended module stack
     ITT     EQ
     ORREQ   r3, r3, #1                              // If so, set LSB in thread stack pointer to indicate extended frame
     ORREQ   lr, lr, #0x10                           // Set bit, return with standard frame
+#endif
     STR     r3, [r2, #0xB0]                         // Save thread stack pointer
+#ifdef __ARMVFP__
     BIC     r3, #1                                  // Clear possibly OR'd bit
-    
+#endif
+
     /* Build kernel stack by copying thread stack two registers at a time */
     ADD     r3, r3, #32                             // Start at bottom of hardware stack
     LDMDB   r3!, {r1-r2}
@@ -498,6 +572,7 @@ _tx_thread_user_return:
     STR     r3, [r2, #20]                           // Set stack size
 #endif
 
+#ifdef __ARMVFP__
     /* If lazy stacking is pending, check if it can be cleared.
        if(LSPACT && tx_thread_module_stack_start < FPCAR && FPCAR < tx_thread_module_stack_end)
        then clear LSPACT. */
@@ -517,24 +592,27 @@ _tx_thread_user_return:
     LDR     r1, =0xE000EF34                         // Address of FPCCR
     STR     r3, [r1]                                // Save updated FPCCR
 _tx_no_lazy_clear:
+#endif
 
     LDR     r0, [r2, #0xB0]                         // Load the module thread stack pointer
     MRS     r3, PSP                                 // Pickup kernel stack pointer
+#ifdef __ARMVFP__
     TST     r0, #1                                  // Is module stack extended?
     ITTE    NE                                      // If so...
     BICNE   lr, #0x10                               // Clear bit, return with extended frame
     BICNE   r0, #1                                  // Clear bit that indicates extended module frame
     ORREQ   lr, lr, #0x10                           // Else set bit, return with standard frame
+#endif
 
     /* Copy kernel hardware stack to module thread stack. */
-    LDM     r3!, {r1-r2}
-    STM     r0!, {r1-r2}
-    LDM     r3!, {r1-r2}
-    STM     r0!, {r1-r2}
-    LDM     r3!, {r1-r2}
-    STM     r0!, {r1-r2}
-    LDM     r3!, {r1-r2}
-    STM     r0!, {r1-r2}
+    LDM     r3!, {r1-r2}                            // Get r0, r1 from kernel stack
+    STM     r0!, {r1-r2}                            // Insert r0, r1 into thread stack
+    LDM     r3!, {r1-r2}                            // Get r2, r3 from kernel stack
+    STM     r0!, {r1-r2}                            // Insert r2, r3 into thread stack
+    LDM     r3!, {r1-r2}                            // Get r12, lr from kernel stack
+    STM     r0!, {r1-r2}                            // Insert r12, lr into thread stack
+    LDM     r3!, {r1-r2}                            // Get pc, xpsr from kernel stack
+    STM     r0!, {r1-r2}                            // Insert pc, xpsr into thread stack
     SUB     r0, r0, #32                             // Subtract 32 to get back to top of stack
     MSR     PSP, r0                                 // Set thread stack pointer
 

@@ -205,7 +205,7 @@ UINT i;
 /*  FUNCTION                                               RELEASE        */
 /*                                                                        */
 /*    _nx_utility_uint_to_string                          PORTABLE C      */
-/*                                                           6.1.8        */
+/*                                                           6.1.9        */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    Yuxin Zhou, Microsoft Corporation                                   */
@@ -241,6 +241,9 @@ UINT i;
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
 /*  08-02-2021     Yuxin Zhou               Initial Version 6.1.8         */
+/*  10-15-2021     Yuxin Zhou               Modified comment(s),          */
+/*                                            checked invalid input value,*/
+/*                                            resulting in version 6.1.9  */
 /*                                                                        */
 /**************************************************************************/
 UINT _nx_utility_uint_to_string(UINT number, UINT base, CHAR *string_buffer, UINT string_buffer_size)
@@ -250,7 +253,7 @@ UINT digit;
 UINT size;
 
     /* Check for invalid input pointers.  */
-    if ((string_buffer == NX_NULL) || (string_buffer_size == 0))
+    if ((string_buffer == NX_NULL) || (string_buffer_size == 0) || (base == 0))
     {
         return(0);
     }
@@ -315,7 +318,7 @@ UINT size;
 /*  FUNCTION                                               RELEASE        */
 /*                                                                        */
 /*    _nx_utility_base64_encode                           PORTABLE C      */
-/*                                                           6.1.6        */
+/*                                                           6.2.0        */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    Yuxin Zhou, Microsoft Corporation                                   */
@@ -350,6 +353,9 @@ UINT size;
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
 /*  04-02-2021     Yuxin Zhou               Initial Version 6.1.6         */
+/*  10-31-2022     Yuxin Zhou               Modified comment(s),          */
+/*                                            improved the internal logic,*/
+/*                                            resulting in version 6.2.0  */
 /*                                                                        */
 /**************************************************************************/
 UINT _nx_utility_base64_encode(UCHAR *name, UINT name_size, UCHAR *base64name, UINT base64name_size, UINT *bytes_copied)
@@ -357,6 +363,7 @@ UINT _nx_utility_base64_encode(UCHAR *name, UINT name_size, UCHAR *base64name, U
 UINT    pad;
 UINT    i, j;
 UINT    step;
+UINT    input_name_size = name_size;
 
 
     /* Check for invalid input pointers.  */
@@ -419,7 +426,16 @@ UINT    step;
         {
 
             /* Use last 2 bits of name character and first 4 bits of next name character for index.  */
-            base64name[j++] = (UCHAR)_nx_utility_base64_array[((((UCHAR)name[i]) & 0x3) << 4) | (((UCHAR)name[i + 1]) >> 4)];
+            if ((i + 1) < input_name_size)
+            {
+                base64name[j++] = (UCHAR)_nx_utility_base64_array[((((UCHAR)name[i]) & 0x3) << 4) | (((UCHAR)name[i + 1]) >> 4)];
+            }
+            else
+            {
+
+                /* If no more name character, pad with zero.  */
+                base64name[j++] = (UCHAR)_nx_utility_base64_array[(((UCHAR)name[i]) & 0x3) << 4];
+            }
             i++;
             step++;
         }
@@ -427,7 +443,16 @@ UINT    step;
         {
 
             /* Use last 4 bits of name character and first 2 bits of next name character for index.  */
-            base64name[j++] = (UCHAR)_nx_utility_base64_array[((((UCHAR)name[i]) & 0xF) << 2) | (((UCHAR)name[i + 1]) >> 6)];
+            if ((i + 1) < input_name_size)
+            {
+                base64name[j++] = (UCHAR)_nx_utility_base64_array[((((UCHAR)name[i]) & 0xF) << 2) | (((UCHAR)name[i + 1]) >> 6)];
+            }
+            else
+            {
+
+                /* If no more name character, pad with zero.  */
+                base64name[j++] = (UCHAR)_nx_utility_base64_array[(((UCHAR)name[i]) & 0xF) << 2];
+            }
             i++;
             step++;
         }
@@ -439,12 +464,6 @@ UINT    step;
             i++;
             step = 0;
         }
-    }
-
-    /* Determine if the index needs to be advanced.  */
-    if (step != 3)
-    {
-        i++;
     }
 
     /* Now add the PAD characters.  */
@@ -467,7 +486,7 @@ UINT    step;
 /*  FUNCTION                                               RELEASE        */
 /*                                                                        */
 /*    _nx_utility_base64_decode                           PORTABLE C      */
-/*                                                           6.1.6        */
+/*                                                           6.1.10       */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    Yuxin Zhou, Microsoft Corporation                                   */
@@ -502,6 +521,13 @@ UINT    step;
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
 /*  04-02-2021     Yuxin Zhou               Initial Version 6.1.6         */
+/*  10-15-2021     Yuxin Zhou               Modified comment(s),          */
+/*                                            removed useless condition,  */
+/*                                            resulting in version 6.1.9  */
+/*  01-31-2022     Yuxin Zhou               Modified comment(s),          */
+/*                                            fixed the issue of reading  */
+/*                                            overflow,                   */
+/*                                            resulting in version 6.1.10 */
 /*                                                                        */
 /**************************************************************************/
 UINT _nx_utility_base64_decode(UCHAR *base64name, UINT base64name_size, UCHAR *name, UINT name_size, UINT *bytes_copied)
@@ -526,13 +552,14 @@ UINT    source_size = base64name_size;
     /* Adjust the length to represent the ASCII name.  */
     base64name_size = ((base64name_size * 6) / 8);
 
-    if (base64name[source_size - 1] == '=')
+    if ((base64name_size) && (base64name[source_size - 1] == '='))
     {
-        if (base64name[source_size - 2] == '=')
-        {
-            base64name_size --;
-        }
         base64name_size--;
+
+        if ((base64name_size) && (base64name[source_size - 2] == '='))
+        {
+            base64name_size--;
+        }
     }
 
     /* Check the buffer size.  */
@@ -599,7 +626,7 @@ UINT    source_size = base64name_size;
             i++;
             step++;
         }
-        else if (step == 2)
+        else
         {
 
             /* Use first 2 bits and following 6 bits of next value.  */

@@ -52,6 +52,11 @@ TODO`s: Configure core settings of application for your IoTHub.
 #define DISABLE_DEVICE_TWIN_SAMPLE
 */
 
+/* Defined, ADU is disabled.  */
+/*
+#define DISABLE_ADU_SAMPLE
+*/
+
 #ifndef ENABLE_DPS_SAMPLE
 
 /* Required when DPS is not used.  */
@@ -71,7 +76,7 @@ TODO`s: Configure core settings of application for your IoTHub.
 
 /* Required when DPS is used.  */
 #ifndef ENDPOINT
-#define ENDPOINT                                    ""
+#define ENDPOINT                                    "global.azure-devices-provisioning.net"
 #endif /* ENDPOINT */
 
 #ifndef ID_SCOPE

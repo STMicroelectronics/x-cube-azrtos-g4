@@ -1,5 +1,5 @@
 
-## <b>Ux_Device_HID application description</b>
+# <b>Ux_Device_HID application description</b>
 
 This application provides an example of Azure RTOS USBX stack usage on STM32G474E-EVAL board,
 it shows how to develop USB Device Human Interface "HID" mouse based application.
@@ -10,19 +10,18 @@ and associated Class descriptor report to build a compliant USB HID mouse device
 At the beginning ThreadX call the entry function tx_application_define(), at this stage, all USBx resources
 are initialized, the HID Class driver is registered and the application creates 2 threads with the same priorities :
 
-  - usbx_app_thread_entry (Prio : 20; PreemptionPrio : 20) used to initialize USB OTG HAL PCD driver and start the device.
+  - app_ux_device_thread_entry (Prio : 10; PreemptionPrio : 10) used to initialize USB HAL PCD driver and start the device.
   - usbx_hid_thread_entry (Prio : 20; PreemptionPrio : 20) used to send HID reports to move automatically the PC host machine cursor.
-
 To customize the HID application by sending the mouse position step by step every 10ms.
 For each 10ms, the application calls the GetPointerData() API to update the mouse position (x, y) and send
 the report buffer through the ux_device_class_hid_event_set() API.
 
 #### <b>Expected success behavior</b>
 
-When plugged to PC host, the STM32G474E must be properly enumerated as an USB HID mouse device.
+When plugged to PC host, the STM32G474E-EVAL must be properly enumerated as an USB HID mouse device.
 During the enumeration phase, device provides host with the requested descriptors (Device, configuration, string).
 Those descriptors are used by host driver to identify the device capabilities.
-Once the STM32G474E USB device successfully completed the enumeration phase, the device sends a HID report after a user button press.
+Once the STM32G474E-EVAL USB device successfully completed the enumeration phase, the device sends a HID report after a user button press.
 Each report sent should move the mouse cursor by one step on host side.
 
 #### <b>Error behaviors</b>
@@ -40,7 +39,7 @@ The remote wakeup feature is not yet implemented (used to bring the USB suspende
 #### <b>ThreadX usage hints</b>
 
  - ThreadX uses the Systick as time base, thus it is mandatory that the HAL uses a separate time base through the TIM IPs.
- - ThreadX is configured with 100 ticks/sec by default, this should be taken into account when using delays or timeouts at application. It is always possible to reconfigure it in the "tx_user.h", the "TX_TIMER_TICKS_PER_SECOND" define,but this should be reflected in "tx_initialize_low_level.s" file too.
+ - ThreadX is configured with 100 ticks/sec by default, this should be taken into account when using delays or timeouts at application. It is always possible to reconfigure it in the "tx_user.h", the "TX_TIMER_TICKS_PER_SECOND" define,but this should be reflected in "tx_initialize_low_level.S" file too.
  - ThreadX is disabling all interrupts during kernel start-up to avoid any unexpected behavior, therefore all system related calls (HAL, BSP) should be done either at the beginning of the application or inside the thread entry functions.
  - ThreadX offers the "tx_application_define()" function, that is automatically called by the tx_kernel_enter() API.
    It is highly recommended to use it to create all applications ThreadX related resources (threads, semaphores, memory pools...)  but it should not in any way contain a system API call (HAL or BSP).
@@ -50,16 +49,16 @@ The remote wakeup feature is not yet implemented (used to bring the USB suspende
    This require changes in the linker files to expose this memory location.
     + For EWARM add the following section into the .icf file:
      ```
-	 place in RAM_region    { last section FREE_MEM };
-	 ```
+     place in RAM_region    { last section FREE_MEM };
+     ```
     + For MDK-ARM:
-	```
+    ```
     either define the RW_IRAM1 region in the ".sct" file
-    or modify the line below in "tx_low_level_initilize.s to match the memory region being used
+    or modify the line below in "tx_initialize_low_level.S to match the memory region being used
         LDR r1, =|Image$$RW_IRAM1$$ZI$$Limit|
-	```
+    ```
     + For STM32CubeIDE add the following section into the .ld file:
-	```
+    ```
     ._threadx_heap :
       {
          . = ALIGN(8);
@@ -67,7 +66,7 @@ The remote wakeup feature is not yet implemented (used to bring the USB suspende
          . = . + 64K;
          . = ALIGN(8);
        } >RAM_D1 AT> RAM_D1
-	```
+    ```
 
        The simplest way to provide memory for ThreadX is to define a new section, see ._threadx_heap above.
        In the example above the ThreadX heap size is set to 64KBytes.
@@ -75,21 +74,16 @@ The remote wakeup feature is not yet implemented (used to bring the USB suspende
        Caution: Make sure that ThreadX does not need more than the provided heap memory (64KBytes in this example).
        Read more in STM32CubeIDE User Guide, chapter: "Linker script".
 
-    + The "tx_initialize_low_level.s" should be also modified to enable the "USE_DYNAMIC_MEMORY_ALLOCATION" flag.
+    + The "tx_initialize_low_level.S" should be also modified to enable the "USE_DYNAMIC_MEMORY_ALLOCATION" flag.
 
 ### <b>Keywords</b>
 
-RTOS, ThreadX, USBX, USB_OTG, Full Speed, HID, Mouse,
+RTOS, ThreadX, USBXDevice, USB, Full Speed, HID, Mouse,
 
 ### <b>Hardware and Software environment</b>
 
-  - This application runs on STM32G4xx devices.
-  - This application has been tested with STMicroelectronics STM32G474E-EVAL board MB1397 Revision B-05
-    and can be easily tailored to any other supported device and development board.
-
-  - STM32G474E-EVAL Rev B board Set-up
-    -Connect the STM32G474E-EVAL Rev B board CN22 to the PC through "TYPE-C" to "Standard A" cable.
-    - Press the User push-button  to move the cursor.
+  - This example runs on STM32G4xx devices.
+  - This example has been tested with STMicroelectronics STM32G474E-EVAL boards Revision MB1397 Revision B-05 and can be easily tailored to any other supported device and development board.
 
 ### <b>How to use it ?</b>
 

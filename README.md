@@ -6,7 +6,7 @@ With Azure RTOS complementing the extensive STM32Cube ecosystem providing free d
 
 **X-CUBE-AZRTOS-G4** (Azure RTOS Software Expansion for STM32Cube) provides a full integration of **Microsoft Azure RTOS** in the STM32Cube environment for the STM32G4 series of microcontrollers. Ready-to-run applicative examples are also provided for the *NUCLEO-G474RE* and *STM32G474E-EVAL* evaluation boards, thus **reducing the learning curve** and ensuring a **smooth application development experience** with Azure RTOS and STM32G4 MCUs.
 
-The scope of this package covers the following Azure RTOS middleware: RTOS (***ThreadX***), USB Device and Host (***USBX***), File System including NOR/NAND memories support (***FileX*** and ***LevelX***) and Networking (***NetXDuo***).
+The scope of this package covers the following Azure RTOS middleware: RTOS (***ThreadX***), USB Device and Host (***USBX***), File System including NOR/NAND memories support (***FileX*** and ***LevelX***) and Networking including Ethernet and WiFi media (***NetXDuo***).
 
 ![](_htmresc/OverviewAzureRTOS_in_STM32Cube.png)
 
@@ -24,9 +24,9 @@ Azure RTOS is a professional grade, highly reliable and market proven Middleware
 
 One of the following toolchains:
 
-- IAR Embedded Workbench for ARM (EWARM)toolchain 8.50.6 + ST-LINKV3.
-- [STM32CubeIDE V1.7.0](https://www.st.com/en/development-tools/stm32cubeide.html)  + ST-LINKV3
-- RealView Microcontroller Development Kit (MDK-ARM) toolchain V5.32 + ST-LINKV3
+- IAR Embedded Workbench for ARM (EWARM)toolchain 8.50.9 + ST-LINKV3.
+- [STM32CubeIDE V1.12.0](https://www.st.com/en/development-tools/stm32cubeide.html)  + ST-LINKV3
+- RealView Microcontroller Development Kit (MDK-ARM) toolchain V5.37 + ST-LINKV3
 
 ## Supported Devices and Boards by Applications
 - [NUCLEO-G474RE](https://www.st.com/en/evaluation-tools/nucleo-g474re.html) *(MB1367 C-04)*
@@ -64,11 +64,17 @@ Details about the content of this release are available in the release note [her
 ## Applications
 | Middleware   |  Applications                    |       Short Description      |
 |--------------|----------------------------------|------------------------------|
+|ThreadX | Tx_Thread_Sync                | It demonstrates how to synchronize between threads using binary semaphores or mutexes. [readme](./Projects/NUCLEO-G474RE/Applications/ThreadX/Tx_Thread_Sync/README.md) |
+|ThreadX | Tx_Thread_MsgQueue            | It demonstrates how to exchange message between threads using Message Queue API and how to handle message from different queues using event queue chaining feature. [readme](./Projects/NUCLEO-G474RE/Applications/ThreadX/Tx_Thread_MsgQueue/README.md) |
 |ThreadX | Tx_Thread_Creation           | It demonstrates how to create and destroy multiple threads using Azure RTOS ThreadX APIs. In addition, it shows how to use preemption threshold between threads and change priorities on-fly. [readme](./Projects/NUCLEO-G474RE/Applications/ThreadX/Tx_Thread_Creation/README.md) |
 |ThreadX | Tx_LowPower                  | It demonstrates how to configure the LowPower feature of Azure RTOS ThreadX stack. In addition, it shows how to use ThreadX MACRO related to the LowPower feature. [readme](./Projects/NUCLEO-G474RE/Applications/ThreadX/Tx_LowPower/README.md) |
 |ThreadX | Tx_MPU                       | It demonstrates how to load, start and unload modules. In addition, it shows how ThreadX memory protection on modules using the Memory Protection Unit (MPU). [readme](./Projects/STM32G474E-EVAL/Applications/ThreadX/Tx_MPU/README.md) |
 |USBX    | Ux_Device_CDC_ACM            | It demonstrates how to develop USB Device communication Class "CDC_ACM" based application. The application is designed to emulate an USB-to-UART bridge following the Virtual COM Port (VCP) implementation, the code provides all required device descriptors framework and associated Class descriptor report to build a compliant USB CDC_ACM device. [readme](./Projects/STM32G474E-EVAL/Applications/USBX/Ux_Device_CDC_ACM/README.md). |
 |USBX    | Ux_Device_HID                | It demonstrates how to develop USB Device Human Interface "HID" mouse based application. The application is designed to emulate an USB HID mouse device, the code provides all required device descriptors framework and associated Class descriptor report to build a compliant USB HID mouse device. [readme](./Projects/STM32G474E-EVAL/Applications/USBX/Ux_Device_HID/README.md)  |
+|USBX    | Ux_Device_CCID               | It demonstrates how to develop USB Device for Integrated Circuit Card Interface Device based application. The application is designed to emulate a smart card reader device, the code provides all required device descriptors framework and associated Class descriptor to build a USB CCID device. [readme](./Projects/STM32G474E-EVAL/Applications/USBX/Ux_Device_CCID/README.md) |
+|USBX    | Ux_Device_HID_Standalone     | It demonstrates how to develop USB Device Human Interface “HID” mouse based bare metal application. The application is designed to emulate an USB HID mouse device, the code provides all required device descriptors framework and associated Class descriptor report to build a compliant USB HID mouse device. [readme](./Projects/STM32G474E-EVAL/Applications/USBX/Ux_Device_HID_Standalone/README.md) |
+|USBX    | Ux_Device_HID_CDC_ACM        | It demonstrates how to develop a composite USB Device application. The application is designed to emulate a USB HID mouse combined with an USB-to-UART bridge following the Virtual COM Port (VCP) implementation, the code provides all required device descriptors framework and associated Class descriptor report to build a compliant composite USB HID and CDC_ACM device. [readme](./Projects/STM32G474E-EVAL/Applications/USBX/Ux_Device_HID_CDC_ACM/README.md). |
+|USBX    | Ux_Device_DFU                | It demonstrates how to develop USB Device Firmware Upgrade "DFU" based application. The application is designed to emulate an USB DFU device, the code provides all required device descriptors framework and associated Class descriptor report to build a compliant USB DFU device. [readme](./Projects/STM32G474E-EVAL/Applications/USBX/Ux_Device_DFU/README.md) |
 |FileX   | Fx_NoR_Write_Read_File       | It demonstrates how to create a Fat File system on the NOR flash using FileX alongside LevelX. The application is designed to execute file operations on the MX25LM51245G NOR flash device, the code provides all required software code for properly managing it. [readme](./Projects/STM32G474E-EVAL/Applications/FileX/Fx_NoR_Write_Read_File/README.md) |
 |FileX   | Fx_SRAM_File_Edit_Standalone | It demonstrates how to create a Fat File system on the internal SRAM memory using FileX running in standalone mode without ThreadX. [readme](./Projects/NUCLEO-G474RE/Applications/FileX/Fx_SRAM_File_Edit_Standalone/README.md) |
 

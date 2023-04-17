@@ -28,6 +28,9 @@
 #include "nx_api.h"
 #include "nx_tcp.h"
 #include "nx_packet.h"
+#ifdef NX_ENABLE_HTTP_PROXY
+#include "nx_http_proxy_client.h"
+#endif /* NX_ENABLE_HTTP_PROXY */
 
 
 /**************************************************************************/
@@ -35,7 +38,7 @@
 /*  FUNCTION                                               RELEASE        */
 /*                                                                        */
 /*    _nx_tcp_socket_packet_process                       PORTABLE C      */
-/*                                                           6.1.8        */
+/*                                                           6.2.0        */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    Yuxin Zhou, Microsoft Corporation                                   */
@@ -71,6 +74,9 @@
 /*    _nx_tcp_socket_state_transmit_check   Check for transmit ability    */
 /*    (nx_tcp_urgent_data_callback)         Application urgent callback   */
 /*                                            function                    */
+/*    _nx_http_proxy_client_connect_response_process                      */
+/*                                          Process HTTP Proxy CONNECT    */
+/*                                            response                    */
 /*                                                                        */
 /*  CALLED BY                                                             */
 /*                                                                        */
@@ -86,6 +92,13 @@
 /*  08-02-2021     Yuxin Zhou               Modified comment(s), and      */
 /*                                            supported TCP/IP offload,   */
 /*                                            resulting in version 6.1.8  */
+/*  01-31-2022     Yuxin Zhou               Modified comment(s), and      */
+/*                                            fixed unsigned integers     */
+/*                                            comparison,                 */
+/*                                            resulting in version 6.1.10 */
+/*  10-31-2022     Wenhui Xie               Modified comment(s), and      */
+/*                                            supported HTTP Proxy,       */
+/*                                            resulting in version 6.2.0  */
 /*                                                                        */
 /**************************************************************************/
 VOID  _nx_tcp_socket_packet_process(NX_TCP_SOCKET *socket_ptr, NX_PACKET *packet_ptr)
@@ -178,8 +191,8 @@ ULONG         tcpip_offload;
                     outside_of_window = NX_FALSE;
                 }
             }
-            else if (((INT)packet_sequence - (INT)rx_sequence >= 0) &&
-                     ((INT)rx_sequence + (INT)rx_window - (INT)packet_sequence > 0))
+            else if (((INT)(packet_sequence - rx_sequence) >= 0) &&
+                     ((INT)(rx_sequence + rx_window - packet_sequence) > 0))
             {
                 outside_of_window = NX_FALSE;
             }
@@ -187,10 +200,10 @@ ULONG         tcpip_offload;
         else
         {
             if ((rx_window > 0) &&
-                ((((INT)packet_sequence - (INT)rx_sequence >= 0) &&
-                  ((INT)rx_sequence + (INT)rx_window - (INT)packet_sequence > 0)) ||
-                 (((INT)packet_sequence + ((INT)packet_data_length - 1) - (INT)rx_sequence >= 0) &&
-                  ((INT)rx_sequence + 1 + ((INT)rx_window - (INT)packet_sequence) - (INT)packet_data_length > 0))))
+                ((((INT)(packet_sequence - rx_sequence) >= 0) &&
+                  ((INT)(rx_sequence + rx_window - packet_sequence) > 0)) ||
+                 (((INT)(packet_sequence + (packet_data_length - 1) - rx_sequence) >= 0) &&
+                  ((INT)(rx_sequence + 1 + (rx_window - packet_sequence) - packet_data_length) > 0))))
             {
                 outside_of_window = NX_FALSE;
             }
@@ -453,6 +466,19 @@ ULONG         tcpip_offload;
     default:
         break;
     }
+
+#ifdef NX_ENABLE_HTTP_PROXY
+
+    /* Check if HTTP Proxy is started and waiting for the response form the HTTP Proxy server.  */
+    if ((socket_ptr -> nx_tcp_socket_state == NX_TCP_ESTABLISHED) &&
+        (socket_ptr -> nx_tcp_socket_ip_ptr -> nx_ip_http_proxy_enable) &&
+        (socket_ptr -> nx_tcp_socket_http_proxy_state == NX_HTTP_PROXY_STATE_CONNECTING))
+    {
+
+        /* Receive and process the response.  */
+        _nx_http_proxy_client_connect_response_process(socket_ptr);
+    }
+#endif /* NX_ENABLE_HTTP_PROXY */
 
     /* Check for an URG (urgent) bit set.  */
     /*lint -e{644} suppress variable might not be initialized, since "tcp_header_copy" was initialized. */

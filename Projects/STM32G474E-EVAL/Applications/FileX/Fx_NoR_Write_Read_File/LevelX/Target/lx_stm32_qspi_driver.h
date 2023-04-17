@@ -30,14 +30,18 @@ extern "C" {
 
 /* USER CODE END ET */
 
-/* The following semaphores are being to notify about RX/TX completion. They need to be released in the transfer callbacks */
+extern QSPI_HandleTypeDef hqspi1;
+
+/* The following semaphore is being to notify about RX/TX completion. It needs to be released in the transfer callbacks */
 extern TX_SEMAPHORE qspi_tx_semaphore;
 extern TX_SEMAPHORE qspi_rx_semaphore;
+
+#define qspi_handle        hqspi1
 
 /* Exported constants --------------------------------------------------------*/
 
 /* the QuadSPI instance, default value set to 0 */
-#define LX_STM32_QSPI_INSTANCE                           0
+#define LX_STM32_QSPI_INSTANCE                           1
 #define LX_STM32_QSPI_DEFAULT_TIMEOUT                    10 * TX_TIMER_TICKS_PER_SECOND
 #define LX_STM32_DEFAULT_SECTOR_SIZE                     LX_STM32_QSPI_SECTOR_SIZE
 
@@ -47,12 +51,12 @@ extern TX_SEMAPHORE qspi_rx_semaphore;
 /* when set to 1 LevelX is initializing the QuadSPI memory,
  * otherwise it is the up to the application to perform it.
  */
-#define LX_STM32_QSPI_INIT                               1
+#define LX_STM32_QSPI_INIT                               0
 
 /* allow the driver to fully erase the QuadSPI chip. This should be used carefully.
  * the call is blocking and takes a while. by default it is set to 0.
  */
-#define LX_STM32_QSPI_ERASE                              1
+#define LX_STM32_QSPI_ERASE                              0
 
 /* USER CODE BEGIN EC */
 
@@ -66,19 +70,16 @@ extern TX_SEMAPHORE qspi_rx_semaphore;
 #define LX_STM32_QSPI_CURRENT_TIME                      tx_time_get
 
 /* Macro called after initializing the QSPI driver
- * e.g. create semaphores used for TX/RX transfer notification */
- /* USER CODE BEGIN LX_STM32_QSPI_POST_INIT */
+ * e.g. create a semaphore used for transfer notification */
+/* USER CODE BEGIN LX_STM32_QSPI_POST_INIT */
 
-#define LX_STM32_QSPI_POST_INIT()                     do { \
-                                                         if (tx_semaphore_create(&qspi_tx_semaphore, "qspi tx semaphore", 0) != TX_SUCCESS) \
-                                                         { \
-                                                           return LX_ERROR; \
-                                                         } \
-                                                         if (tx_semaphore_create(&qspi_rx_semaphore, "qspi rx semaphore", 0) != TX_SUCCESS) \
-                                                         { \
-                                                           return LX_ERROR; \
-                                                         } \
-                                                       } while(0)
+#define LX_STM32_QSPI_POST_INIT()                       do { \
+                                                           if (tx_semaphore_create(&qspi_tx_semaphore, "qspi rx transfer semaphore", 0) != TX_SUCCESS || \
+                                                               tx_semaphore_create(&qspi_rx_semaphore, "qspi tx transfer semaphore", 0) != TX_SUCCESS ) \
+                                                           { \
+                                                             return LX_ERROR; \
+                                                           } \
+                                                        } while(0)
 
 /* USER CODE END LX_STM32_QSPI_POST_INIT */
 
@@ -125,12 +126,12 @@ extern TX_SEMAPHORE qspi_rx_semaphore;
 /* Define how to notify about write completion operation */
 /* USER CODE BEGIN LX_STM32_QSPI_WRITE_CPLT_NOTIFY */
 
-#define LX_STM32_QSPI_WRITE_CPLT_NOTIFY(__status__)      do { \
+#define LX_STM32_QSPI_WRITE_CPLT_NOTIFY(__status__)     do { \
                                                           if(tx_semaphore_get(&qspi_tx_semaphore, HAL_QSPI_TIMEOUT_DEFAULT_VALUE) != TX_SUCCESS) \
                                                           { \
                                                             __status__ = LX_ERROR; \
                                                           } \
-                                                         } while(0)
+                                                        } while(0)
 /* USER CODE END LX_STM32_QSPI_WRITE_CPLT_NOTIFY */
 
 /* Macro called after performing write operation */
@@ -164,6 +165,14 @@ UINT lx_qspi_driver_system_error(UINT error_code);
 
 UINT lx_stm32_qspi_initialize(LX_NOR_FLASH *nor_flash);
 
+#if (LX_STM32_QSPI_INIT == 1)
+extern void MX_QUADSPI1_Init(void);
+#endif
+
+#if (LX_STM32_QSPI_INIT == 1)
+#define qspi_driver_init() MX_QUADSPI1_Init()
+#endif
+
 /* USER CODE BEGIN EFP */
 
 /* USER CODE END EFP */
@@ -173,27 +182,27 @@ UINT lx_stm32_qspi_initialize(LX_NOR_FLASH *nor_flash);
 
 /* USER CODE END PD */
 
-#define LX_STM32_QSPI_SECTOR_SIZE                 MT25QL512ABB_SECTOR_64K
-#define LX_STM32_QSPI_FLASH_SIZE                  MT25QL512ABB_FLASH_SIZE
-#define LX_STM32_QSPI_DUMMY_CYCLES_READ_QUAD      4
 #define LX_STM32_QSPI_PAGE_SIZE                   MT25QL512ABB_PAGE_SIZE
+#define LX_STM32_QSPI_FLASH_SIZE                  MT25QL512ABB_FLASH_SIZE
 #define LX_STM32_QSPI_BULK_ERASE_MAX_TIME         MT25QL512ABB_BULK_ERASE_MAX_TIME
+#define LX_STM32_QSPI_SR_WIP                      MT25QL512ABB_SR_WIP
+#define LX_STM32_QSPI_WRITE_ENABLE_CMD            MT25QL512ABB_WRITE_ENABLE_CMD
+#define LX_STM32_QSPI_READ_STATUS_REG_CMD         MT25QL512ABB_READ_STATUS_REG_CMD
+#define LX_STM32_QSPI_RESET_MEMORY_CMD            MT25QL512ABB_RESET_MEMORY_CMD
+#define LX_STM32_QSPI_RESET_ENABLE_CMD            MT25QL512ABB_RESET_ENABLE_CMD
+#define LX_STM32_QSPI_READ_VOL_CFG_REG_CMD        MT25QL512ABB_READ_VOL_CFG_REG_CMD
+#define LX_STM32_QSPI_WRITE_VOL_CFG_REG_CMD       MT25QL512ABB_WRITE_VOL_CFG_REG_CMD
+#define LX_STM32_QSPI_SECTOR_SIZE                 MT25QL512ABB_SECTOR_64K
+#define LX_STM32_QSPI_DUMMY_CYCLES_READ_QUAD_STR  4
 #define LX_STM32_QSPI_SECTOR_ERASE_MAX_TIME       MT25QL512ABB_SECTOR_ERASE_MAX_TIME
 #define LX_STM32_QSPI_SR_WEN                      MT25QL512ABB_SR_WEN
-#define LX_STM32_QSPI_SR_WIP                      MT25QL512ABB_SR_WIP
-
-#define LX_STM32_QSPI_QUAD_INOUT_FAST_READ_CMD   MT25QL512ABB_4IO_FAST_READ_CMD
-#define LX_STM32_QSPI_BULK_ERASE_CMD             MT25QL512ABB_BULK_ERASE_CMD
-#define LX_STM32_QSPI_SECTOR_ERASE_CMD           MT25QL512ABB_SECTOR_ERASE_64K_CMD
-#define LX_STM32_QSPI_WRITE_ENABLE_CMD           MT25QL512ABB_WRITE_ENABLE_CMD
-#define LX_STM32_QSPI_READ_STATUS_REG_CMD        MT25QL512ABB_READ_STATUS_REG_CMD
-#define LX_STM32_QSPI_QUAD_IN_FAST_PROG_CMD      MT25QL512ABB_EXTENDED_QUAD_INPUT_FAST_PROG_CMD
-#define LX_STM32_QSPI_RESET_MEMORY_CMD           MT25QL512ABB_RESET_MEMORY_CMD
-#define LX_STM32_QSPI_RESET_MAX_TIME             MT25QL512ABB_RESET_MAX_TIME
-#define LX_STM32_QSPI_AUTOPOLLING_INTERVAL_TIME  MT25QL512ABB_AUTOPOLLING_INTERVAL_TIME
-#define LX_STM32_QSPI_RESET_ENABLE_CMD           MT25QL512ABB_RESET_ENABLE_CMD
-#define LX_STM32_QSPI_READ_VOL_CFG_REG_CMD       MT25QL512ABB_READ_VOL_CFG_REG_CMD
-#define LX_STM32_QSPI_WRITE_VOL_CFG_REG_CMD      MT25QL512ABB_WRITE_VOL_CFG_REG_CMD
+#define LX_STM32_QSPI_QUAD_INOUT_FAST_READ_CMD    MT25QL512ABB_4IO_FAST_READ_CMD
+#define LX_STM32_QSPI_BULK_ERASE_CMD              MT25QL512ABB_BULK_ERASE_CMD
+#define LX_STM32_QSPI_SECTOR_ERASE_CMD            MT25QL512ABB_SECTOR_ERASE_64K_CMD
+#define LX_STM32_QSPI_QUAD_IN_FAST_PROG_CMD       MT25QL512ABB_EXTENDED_QUAD_INPUT_FAST_PROG_CMD
+#define LX_STM32_QSPI_RESET_MAX_TIME              MT25QL512ABB_RESET_MAX_TIME
+#define LX_STM32_QSPI_AUTOPOLLING_INTERVAL_TIME   MT25QL512ABB_AUTOPOLLING_INTERVAL_TIME
+#define LX_STM32_QSPI_VCR_NB_DUMMY                MT25QL512ABB_VCR_DC
 
 /* USER CODE BEGIN 1 */
 

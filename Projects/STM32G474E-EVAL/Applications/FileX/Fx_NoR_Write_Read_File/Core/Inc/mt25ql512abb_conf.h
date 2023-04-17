@@ -1,18 +1,17 @@
 /**
   ******************************************************************************
-  * @file    mt25ql512abb_conf.h
+  * @file    mt25ql512abb_conf_template.h
   * @author  MCD Application Team
   * @brief   This file contains all the description of the MT25QL512ABB QSPI memory.
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2018 STMicroelectronics.
-  * All rights reserved.</center></h2>
+  * Copyright (c) 2018 STMicroelectronics.
+  * All rights reserved.
   *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
   *
   ******************************************************************************
   */
@@ -39,16 +38,4 @@
 #endif
 
 #endif /* MT25QL512ABB_CONF_H */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
 

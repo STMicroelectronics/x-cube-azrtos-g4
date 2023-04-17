@@ -1,3 +1,4 @@
+
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
@@ -20,7 +21,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "app_filex.h"
-#include "main.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -32,6 +33,7 @@
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
+
 /* USER CODE BEGIN PD */
 #define DEFAULT_SECTOR_SIZE     512
 /* USER CODE END PD */
@@ -42,6 +44,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+
 /* USER CODE BEGIN PV */
 /* Define FileX global data structures.  */
 /* FileX SRAM disk media instance */
@@ -57,30 +60,30 @@ extern UART_HandleTypeDef hlpuart1;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
+
 /* USER CODE BEGIN PFP */
 
-#if defined ( __GNUC__) && !defined(__clang__)
-/* With GCC, small printf (option LD Linker->Libraries->Small printf
-   set to 'Yes') calls __io_putchar() */
-#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
-#else
-#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
-#endif /* __GNUC__ */
+
 /* USER CODE END PFP */
 
 /**
   * @brief  Application FileX Initialization.
-  * @param memory_ptr: memory pointer
   * @retval int
   */
 UINT MX_FileX_Init(VOID)
 {
   UINT ret = FX_SUCCESS;
-
   /* USER CODE BEGIN MX_FileX_Init */
+
+  /* USER CODE END MX_FileX_Init */
+
   /* Initialize FileX.  */
   fx_system_initialize();
-  /* USER CODE END MX_FileX_Init */
+
+  /* USER CODE BEGIN MX_FileX_Init 1*/
+
+  /* USER CODE END MX_FileX_Init 1*/
+
   return ret;
 }
 
@@ -260,13 +263,6 @@ VOID MX_FileX_Process(VOID)
   * @param  None
   * @retval None
   */
-PUTCHAR_PROTOTYPE
-{
-  /* Place your implementation of fputc here */
-  /* e.g. write a character to the USART1 and Loop until the end of transmission */
-  HAL_UART_Transmit(&hlpuart1, (uint8_t *)&ch, 1, 0xFFFF);
 
-  return ch;
-}
 
 /* USER CODE END 1 */

@@ -44,7 +44,7 @@ PROCESSING_FINISHED       = 44
 /* USER CODE BEGIN PD */
 #define DEFAULT_STACK_SIZE         1024
 #define MODULE_DATA_SIZE           32*1024
-#define OBJECT_MEM_SIZE            8*1024
+#define OBJECT_MEM_SIZE            16*1024
 
 #define READONLY_REGION            0x2001FE00
 #define READWRITE_REGION           0x2001FF00
@@ -74,7 +74,7 @@ UCHAR  object_memory[OBJECT_MEM_SIZE];
 /* Define the count of memory faults.  */
 ULONG                   memory_faults = 0;
 
-static UCHAR tx_byte_pool_buffer[TX_APP_MEM_POOL_SIZE] __attribute__((aligned (4)));
+static UCHAR tx_byte_pool_buffer[TX_APP_MEM_POOL_SIZE];
 static TX_BYTE_POOL ModuleManagerBytePool;
 /* USER CODE END PV */
 

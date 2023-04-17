@@ -1,3 +1,4 @@
+
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
@@ -27,8 +28,8 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "fx_api.h"
-
 #include "fx_stm32_sram_driver.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "main.h"
@@ -52,12 +53,12 @@ extern "C" {
 
 /* Exported functions prototypes ---------------------------------------------*/
 UINT MX_FileX_Init(VOID);
-
 /* USER CODE BEGIN EFP */
 VOID MX_FileX_Process(VOID);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+
 /* USER CODE BEGIN PD */
 
 /* USER CODE END PD */

@@ -23,7 +23,7 @@
 #define __APP_THREADX_H__
 
 #ifdef __cplusplus
- extern "C" {
+extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
@@ -44,7 +44,18 @@
 
 /* USER CODE END EC */
 
+/* Private defines -----------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+
+/* USER CODE END PD */
+
+/* Main thread defines -------------------------------------------------------*/
+/* USER CODE BEGIN MTD */
+
+/* USER CODE END MTD */
+
 /* Exported macro ------------------------------------------------------------*/
+
 /* USER CODE BEGIN EM */
 
 /* USER CODE END EM */
@@ -58,7 +69,7 @@ void MX_AZURE_RTOS_Init(void);
 
 /* Private defines -----------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define TX_APP_MEM_POOL_SIZE                               16*1024
+#define TX_APP_MEM_POOL_SIZE                               10*1024
 #define MODULE_MANAGER_THREAD_PRIO                         4
 #define MODULE_MANAGER_THREAD_PREEMPTION_THRESHOLD         MODULE_MANAGER_THREAD_PRIO
 /* USER CODE END PD */
